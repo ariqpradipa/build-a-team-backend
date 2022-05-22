@@ -52,8 +52,6 @@ app.post("/register", (req, res) => {
 
   // Use bcrypt.hash() function to hash the password
   bcrypt.hash(temp.password, 10, (err, hashedPassword) => {
-
-
     if (err) {
       return err;
     }
@@ -62,16 +60,39 @@ app.post("/register", (req, res) => {
     db.query(query),
       (err, results) => {
         if (err) {
-          console.log("errorrrr22");
-
           console.log(err);
           return;
         }
         console.log(results);
-        console.log("Data insert berhasil") ;
+        console.log("Data insert berhasil");
       };
   });
-  res.end("user berhasil dibuat");  
+  res.end("user berhasil dibuat");
+});
+
+app.post("/login", (req, res) => {
+  temp = req.session;
+  temp.username = req.body.username;
+  temp.password = req.body.password;
+  console.log(temp.username);
+  console.log(temp.password);
+
+  const query = `SELECT password FROM users WHERE username LIKE '${temp.username}';`;
+  db.query(query, (err, results) => {
+    if (err) {
+      alert("Login Failed");
+      res.end("failed");
+    }
+
+    bcrypt.compare(temp.password, results.rows[0].password, (err, isMatch) => {
+      if (err) {
+        res.send('failed');
+      }
+      //If password matches then display true
+      console.log(`is Match = ${isMatch}.`);
+      res.end("Login");
+    });
+  });
 });
 
 app.post("/insert", (req, res) => {
