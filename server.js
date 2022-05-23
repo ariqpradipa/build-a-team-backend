@@ -96,6 +96,44 @@ app.post("/login", (req, res) => {
   });
 });
 
+app.put("/setSelectedPlayer", (req, res) => {
+  temp = req.session;
+  temp.teamID = req.body.teamID;
+  temp.playerID = req.body.playerID;
+  console.log(`Got player ${temp.playerID} from team ${temp.teamID} to select`);
+
+
+  const query = `UPDATE pemain SET selected = NOT selected WHERE id_tim = '${temp.teamID}' AND id_pemain = '${temp.playerID}'`;
+  db.query(query, (err, results) => {
+    if (err) {
+      alert("Set selected failed");
+      res.end("failed to select");
+    } else {
+      console.log(results);
+      res.send("query select pemain berhasil");
+    }
+    
+  });
+});
+
+app.get("/getSelectedPlayer", (req, res) => {
+  temp = req.session;
+  temp.teamID = req.body.teamID;
+  console.log(`Getting all selected players from team ${temp.teamID} ...`);
+
+  const query = `SELECT no_punggung, nama, posisi_pemain FROM pemain LEFT JOIN identitas ON pemain.id_identitas = identitas.id_identitas WHERE pemain.selected = 't' AND pemain.id_tim = '${temp.teamID}'; `;
+  db.query(query, (err, results) => {
+    if (err) {
+      alert("Get selected failed");
+      res.end("failed to get selected player");
+    } else {
+      console.log(results.rows);
+      res.send(`query selected pemain berhasil ${results.rows}`);
+    }
+    
+  });
+});
+
 app.post("/createplayer", (req, res) => {
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${req.body.nama}', ${req.body.umur}, ${req.body.no_punggung}, ${req.body.tinggi}, '${req.body.berat_badan}');`;
   const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, passing, stamina, dribbling) VALUES (${req.body.agility}, ${req.body.defence}, ${req.body.shooting}, ${req.body.passing}, ${req.body.stamina}, ${req.body.dribbling});`;
