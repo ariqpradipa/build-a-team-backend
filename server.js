@@ -59,15 +59,14 @@ app.post("/register", (req, res) => {
     }
 
     const query = `INSERT INTO users VALUES ('${temp.username}', '${hashedPassword}');`;
-    db.query(query),
-      (err, results) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        console.log(results);
-        console.log("Data insert berhasil");
-      };
+    db.query(query), (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      console.log(results.rows[0]);
+      console.log("Data insert berhasil");
+    };
   });
   res.end("user berhasil dibuat");
 });
@@ -97,6 +96,109 @@ app.post("/login", (req, res) => {
   });
 });
 
+app.post("/createplayer", (req, res) => {
+  const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${req.body.nama}', ${req.body.umur}, ${req.body.no_punggung}, ${req.body.tinggi}, '${req.body.berat_badan}');`;
+  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, passing, stamina, dribbling) VALUES (${req.body.agility}, ${req.body.defence}, ${req.body.shooting}, ${req.body.passing}, ${req.body.stamina}, ${req.body.dribbling});`;
+
+  db.query(queryIdentitas, (err, resultsIdentitas) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    console.log(resultsIdentitas);
+
+  });
+  db.query(queryStatistik, (err, resultsStatistik) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    console.log(resultsStatistik);
+  });
+
+  const queryGetIndentitas = `SELECT * FROM identitas ORDER BY id_identitas DESC LIMIT 1;`;
+  const queryGetStatistik = `SELECT * FROM statistik ORDER BY id_statistik DESC LIMIT 1;`;
+  db.query(queryGetIndentitas, (err, resultsGetIndentitas) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+
+    console.log(resultsGetIndentitas);
+
+    db.query(queryGetStatistik, (err, resultsGetStatistik) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      console.log(resultsGetStatistik);
+
+      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, formasis) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, '${req.body.formasis}');`;
+      db.query(querypemain, (err, resultsPemain) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        console.log(resultsPemain);
+      });
+    });
+  });
+  res.end("player created successfully");
+});
+
+app.post("/insert", (req, res) => {
+  db.query(
+    `insert into mahasiswa values ('${req.body.npm}', '${req.body.nama}', '${req.body.universitas}', '${req.body.jurusan}')`,
+    (err) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      res.send(
+        `NPM ${req.body.npm}, nama ${req.body.nama}, universitas ${req.body.universitas}, jurusan ${req.body.jurusan} berhasil dimasukkan`
+      );
+    }
+  );
+});
+
+app.put("/update", (req, res) => {
+  db.query(
+    `update mahasiswa set nama = '${req.body.nama}', universitas = '${req.body.universitas}', jurusan = '${req.body.jurusan}' where npm = ${req.body.npm}`,
+    (err) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      res.send(`data mahasiswa dengan NPM ${req.body.npm} berhasil di update.`);
+    }
+  );
+});
+
+app.delete("/delete", (req, res) => {
+  db.query(`delete from mahasiswa where npm = ${req.body.npm}`, (err) => {
+    if (err) {
+      console.log(err);
+      res.send(err);
+      return;
+    }
+    res.send(`Data mahasiswa dengan npm '${req.body.npm}' berhasil di delete`);
+  });
+});
+
+app.get("/getOne", (req, res) => {
+  db.query(
+    `select * from mahasiswa where npm = '${req.body.npm}'`,
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      res.send(results.rows);
+    }
+  );
+});
 app.listen(8000, () => {
   console.log("Server Kelompok 7 berjalan");
 });
