@@ -2,13 +2,15 @@
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
-
-//initialize the app as an express app
+const cors = require("cors");
 const app = express();
-const router = express.Router();
 const { Client } = require("pg");
 const bcrypt = require("bcrypt");
 
+var corsOptions = {
+  origin: "http://localhost:8081"
+};
+app.use(cors(corsOptions));
 //middleware (session)
 app.use(
   session({
@@ -95,59 +97,6 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.post("/insert", (req, res) => {
-  db.query(
-    `insert into mahasiswa values ('${req.body.npm}', '${req.body.nama}', '${req.body.universitas}', '${req.body.jurusan}')`,
-    (err) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-
-      res.send(
-        `NPM ${req.body.npm}, nama ${req.body.nama}, universitas ${req.body.universitas}, jurusan ${req.body.jurusan} berhasil dimasukkan`
-      );
-    }
-  );
-});
-
-app.put("/update", (req, res) => {
-  db.query(
-    `update mahasiswa set nama = '${req.body.nama}', universitas = '${req.body.universitas}', jurusan = '${req.body.jurusan}' where npm = ${req.body.npm}`,
-    (err) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      res.send(`data mahasiswa dengan NPM ${req.body.npm} berhasil di update.`);
-    }
-  );
-});
-
-app.delete("/delete", (req, res) => {
-  db.query(`delete from mahasiswa where npm = ${req.body.npm}`, (err) => {
-    if (err) {
-      console.log(err);
-      res.send(err);
-      return;
-    }
-    res.send(`Data mahasiswa dengan npm '${req.body.npm}' berhasil di delete`);
-  });
-});
-
-app.get("/getOne", (req, res) => {
-  db.query(
-    `select * from mahasiswa where npm = '${req.body.npm}'`,
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-
-      res.send(results.rows);
-    }
-  );
-});
 app.listen(8000, () => {
   console.log("Server Kelompok 7 berjalan");
 });
