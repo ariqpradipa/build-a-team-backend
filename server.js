@@ -184,6 +184,47 @@ app.post("/createplayer", (req, res) => {
   res.end("player created successfully");
 });
 
+app.post('/createteam', (req, res) => {
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${req.body.user_id}');`; //query tambahkan tim baru ke database  
+      db.query(query, (err, results) => {
+      if (err) { 
+          console.log(err);
+          res.end('fail');
+      }
+      res.end('Team created successfully');
+  });
+});
+
+//router 5: melakukan pemngambilan data dari database
+app.get('/getteam', (req, res) => {
+  //temp = req.session;
+  //temp.user_id = req.body.user_id;
+  const query = `select * from tim;`; // query ambil data
+  //mendapatkan data dari database
+  db.query(query, (err, results) => {
+      if(err){
+          console.log(err)
+          return
+      }
+      res.write(`<table>
+                  <tr>
+                      <th>ID</th>
+                      <th>Nama Team</th>
+                      <th>Manager</th>
+                      <th>Formasi</th>
+                  </tr>`);
+      for(row of results.rows){
+          res.write(`<tr>
+                      <td>${row["id_tim"]}</td>
+                      <td>${row["nama_tim"]}</td>
+                      <td>${row["manager"]}</td>
+                      <td>${row["formasis"]}</td>
+                  </tr>`);
+      }
+      res.end(`</table>`);
+  });
+});
+
 app.listen(8000, () => {
   console.log("Server Kelompok 7 berjalan");
 });
