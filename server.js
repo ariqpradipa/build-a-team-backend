@@ -4,11 +4,11 @@ const session = require("express-session");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
-const { Client } = require("pg");
+const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 
 var corsOptions = {
-  origin: "http://localhost:8081"
+  origin: "http://localhost:3000",
 };
 app.use(cors(corsOptions));
 //middleware (session)
@@ -27,7 +27,7 @@ app.use(
 );
 var temp;
 
-const db = new Client({
+const db = new Pool({
   user: "proyek_akhir",
   host: "aidan-sbd.postgres.database.azure.com",
   database: "buildateam",
@@ -59,14 +59,15 @@ app.post("/register", (req, res) => {
     }
 
     const query = `INSERT INTO users VALUES ('${temp.username}', '${hashedPassword}');`;
-    db.query(query), (err, results) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      console.log(results.rows[0]);
-      console.log("Data insert berhasil");
-    };
+    db.query(query),
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        console.log(results.rows[0]);
+        console.log("Data insert berhasil");
+      };
   });
   res.end("user berhasil dibuat");
 });
@@ -87,12 +88,20 @@ app.post("/login", (req, res) => {
 
     bcrypt.compare(temp.password, results.rows[0].password, (err, isMatch) => {
       if (err) {
-        res.send('failed');
+        res.send("failed");
       }
       //If password matches then display true
       console.log(`is Match = ${isMatch}.`);
-      res.end("Login");
     });
+  });
+  const queryId = `SELECT user_id FROM users WHERE username LIKE '${temp.username}';`;
+  db.query(queryId, (err, results) => {
+    if (err) {
+      alert("get ID failed");
+      res.end("failed");
+    }
+    temp.user_id = results.rows[0].user_id;
+    res.end("Login berhasil");
   });
 });
 
@@ -101,7 +110,6 @@ app.put("/setSelectedPlayer", (req, res) => {
   temp.teamID = req.body.teamID;
   temp.playerID = req.body.playerID;
   console.log(`Got player ${temp.playerID} from team ${temp.teamID} to select`);
-
 
   const query = `UPDATE pemain SET selected = NOT selected WHERE id_tim = '${temp.teamID}' AND id_pemain = '${temp.playerID}'`;
   db.query(query, (err, results) => {
@@ -112,7 +120,6 @@ app.put("/setSelectedPlayer", (req, res) => {
       console.log(results);
       res.send("query select pemain berhasil");
     }
-    
   });
 });
 
@@ -130,7 +137,6 @@ app.get("/getSelectedPlayer", (req, res) => {
       console.log(results.rows);
       res.send(`query selected pemain berhasil ${results.rows}`);
     }
-    
   });
 });
 
@@ -144,7 +150,6 @@ app.post("/createplayer", (req, res) => {
       return;
     }
     console.log(resultsIdentitas);
-
   });
   db.query(queryStatistik, (err, resultsStatistik) => {
     if (err) {
@@ -184,44 +189,54 @@ app.post("/createplayer", (req, res) => {
   res.end("player created successfully");
 });
 
-app.post('/createteam', (req, res) => {
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${req.body.user_id}');`; //query tambahkan tim baru ke database  
-      db.query(query, (err, results) => {
-      if (err) { 
-          console.log(err);
-          res.end('fail');
-      }
-      res.end('Team created successfully');
+app.post("/createteam", (req, res) => {
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${req.body.user_id}');`; //query tambahkan tim baru ke database
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.end("fail");
+    }
+    res.end("Team created successfully");
   });
 });
 
 //router 5: melakukan pemngambilan data dari database
-app.get('/getteam', (req, res) => {
-  //temp = req.session;
-  //temp.user_id = req.body.user_id;
-  const query = `select * from tim;`; // query ambil data
+app.get("/getteam", (req, res) => {
+  console.log(req.session);
+  const query = `select * from tim where user_id = ${req.session.user_id};`; // query ambil data
   //mendapatkan data dari database
   db.query(query, (err, results) => {
-      if(err){
-          console.log(err)
-          return
-      }
-      res.write(`<table>
+    if (err) {
+      console.log(err);
+      res.end("Failed to get team");
+      return;
+    }
+    res.write(`<table>
                   <tr>
                       <th>ID</th>
                       <th>Nama Team</th>
                       <th>Manager</th>
                       <th>Formasi</th>
                   </tr>`);
-      for(row of results.rows){
-          res.write(`<tr>
+    for (row of results.rows) {
+      res.write(`<tr>
                       <td>${row["id_tim"]}</td>
                       <td>${row["nama_tim"]}</td>
                       <td>${row["manager"]}</td>
                       <td>${row["formasis"]}</td>
                   </tr>`);
-      }
-      res.end(`</table>`);
+    }
+    res.end(`</table>`);
+  });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      res.end("Already Logout");s
+      return console.error(err);
+    }
+    res.end("Logout success");
   });
 });
 
