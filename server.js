@@ -190,14 +190,12 @@ app.post("/login", (req, res) => {
 });
 
 // Set Selected Player
-app.put("/setselectedslayer", (req, res) => {
+app.put("/setselectedplayer", (req, res) => {
 
-  temp = req.session;
-  temp.teamID = req.body.teamID;
-  temp.playerID = req.body.playerID;
-  console.log(`Got player ${temp.playerID} from team ${req.session.id_tim} to select`);
+  playerID = req.body.playerID;
+  console.log(`Got player ${playerID} from team ${req.session.id_tim} to select`);
 
-  const query = `UPDATE pemain SET selected = NOT selected WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${temp.playerID}'`;
+  const query = `UPDATE pemain SET selected = true WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${playerID}'`;
   db.query(query, (err, results) => {
 
     if (err) {
@@ -213,6 +211,28 @@ app.put("/setselectedslayer", (req, res) => {
     }
   });
 });
+
+// Unset Selected Player
+app.put("/unsetselectedplayer", (req, res) => {
+
+  playerID = req.body.playerID;
+
+  const query = `UPDATE pemain SET selected = false WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${playerID}'`;
+  db.query(query, (err, results) => {
+
+    if(err) {
+
+      console.log(err);
+      res.end("failed to unselect");
+
+    }
+
+    console.log(results);
+    res.end("query unset pemain berhasil");
+
+  });
+});
+
 
 app.get("/getselectedplayer", (req, res) => {
 
