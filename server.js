@@ -280,6 +280,12 @@ app.post("/createplayer", (req, res) => {
   
   inputPosisi = req.body.posisi;
 
+  if(req.session.username == undefined || req.session.password == undefined) {
+    res.end("Not logged in yet");
+    alert("Not logged in yet");
+    return;
+  }
+
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}', ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan});`;
   const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES ('${inputAgility}', '${inputDefence}', '${inputShooting}', '${inputSpeed}', '${inputPassing}', '${inputStamina}', '${inputDribbling}');`;
 
@@ -294,7 +300,7 @@ app.post("/createplayer", (req, res) => {
 
     }
 
-    console.log(resultsIdentitas.rows[0]);
+    console.log(resultsIdentitas);
 
   });
   db.query(queryStatistik, (err, resultsStatistik) => {
@@ -308,7 +314,7 @@ app.post("/createplayer", (req, res) => {
 
     }
 
-    console.log(resultsStatistik.rows[0]);
+    console.log(resultsStatistik);
 
   });
 
@@ -351,15 +357,14 @@ app.post("/createplayer", (req, res) => {
 
         }
 
-        res.end("player created successfully");
-        console.log(resultsPemain.rows[0]);
+        console.log(resultsPemain);
         return;
 
       });
     });
   });
 
-  res.end("player created failed");
+  res.end("player created successfully");
 
 });
 
