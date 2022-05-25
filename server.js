@@ -58,25 +58,26 @@ db.connect((err) => {
 // Register User
 app.post("/register", (req, res) => {
 
-  temp = req.session;
-  temp.username = req.body.username;
+  inputUsername = req.body.username;
   inputPassword = req.body.password;
 
   // Use bcrypt.hash() function to hash the password
   bcrypt.hash(inputPassword, 10, (err, hashedPassword) => {
     if (err) {
+
+      res.end("User gagal ditambahkan");
       return err;
+
     }
 
-    temp.password = hashedPassword;
-
-    const query = `INSERT INTO users VALUES ('${temp.username}', '${hashedPassword}');`;
+    const query = `INSERT INTO users VALUES ('${inputPassword}', '${hashedPassword}');`;
     db.query(query), (err, results) => {
       if (err) {
 
         console.log(err);
         alert("User dengan username/password tersebut sudah ada.");
         res.end("Gagal membuat user baru");
+
         return;
 
       }
@@ -96,7 +97,7 @@ app.post("/login", (req, res) => {
 
   temp = req.session;
   temp.username = req.body.username;
-  temp.password = req.body.password;
+  inputPassword = req.body.password;
 
   if (temp.username === "" || temp.password === "") {
 
@@ -106,6 +107,8 @@ app.post("/login", (req, res) => {
     return;
 
   }
+
+  temp.password = hashedPassword;
 
   const query = `SELECT password FROM users WHERE username LIKE '${temp.username}';`;
   db.query(query, (err, results) => {
@@ -187,7 +190,7 @@ app.post("/login", (req, res) => {
 });
 
 // Set Selected Player
-app.put("/setSelectedPlayer", (req, res) => {
+app.put("/setselectedslayer", (req, res) => {
 
   temp = req.session;
   temp.teamID = req.body.teamID;
@@ -211,7 +214,7 @@ app.put("/setSelectedPlayer", (req, res) => {
   });
 });
 
-app.get("/getSelectedPlayer", (req, res) => {
+app.get("/getselectedplayer", (req, res) => {
 
   temp = req.session;
   console.log(temp);
@@ -311,6 +314,37 @@ app.post("/createplayer", (req, res) => {
 
 });
 
+//get player
+app.get("/getplayer", (req, res) => {
+
+  const queryTim = `SELECT * FROM tim where TIM.user_id = ${req.session.user_id};`;
+  db.query(queryTim, (err, resultsTim) => {
+
+    if (err) {
+
+      alert("gagal mengambil data player");
+      res.end("gagal ngambil data");
+
+    }
+
+    objectTim = resultsTim.rows[0];
+    console.log(objectTim);
+    const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
+    db.query(query, (err, results) => {
+
+      if (err) {
+
+        //alert("Get player failed");
+        res.end("Failed to get player");
+
+      }
+      console.log(results.rows);
+      res.send(`query mengambil pemain berhasil ${results.rows}`);
+
+    });
+  });
+});
+
 // ROUTE CREATE TEAM
 app.post("/createteam", (req, res) => {
 
@@ -406,37 +440,7 @@ app.get("/getteam", (req, res) => {
   });
 });
 
-app.get("/getPlayer", (req, res) => {
-
-  const queryTim = `SELECT * FROM tim where TIM.user_id = ${req.session.user_id};`;
-  db.query(queryTim, (err, resultsTim) => {
-
-    if (err) {
-
-      alert("gagal mengambil data player");
-      res.end("gagal ngambil data");
-
-    }
-
-    objectTim = resultsTim.rows[0];
-    console.log(objectTim);
-    const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
-    db.query(query, (err, results) => {
-
-      if (err) {
-
-        //alert("Get player failed");
-        res.end("Failed to get player");
-
-      }
-      console.log(results.rows);
-      res.send(`query mengambil pemain berhasil ${results.rows}`);
-
-    });
-  });
-});
-
-app.put("/setFormation", (req, res) => {
+app.put("/setformation", (req, res) => {
 
   temp = req.session;
   temp.teamID = req.body.teamID;
