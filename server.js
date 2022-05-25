@@ -220,7 +220,7 @@ app.put("/unsetselectedplayer", (req, res) => {
   const query = `UPDATE pemain SET selected = false WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${playerID}'`;
   db.query(query, (err, results) => {
 
-    if(err) {
+    if (err) {
 
       console.log(err);
       res.end("failed to unselect");
@@ -236,9 +236,6 @@ app.put("/unsetselectedplayer", (req, res) => {
 
 app.get("/getselectedplayer", (req, res) => {
 
-  temp = req.session;
-  console.log(temp);
-  //temp.teamID = req.body.teamID;
   console.log(`Getting all selected players from team ${req.session.id_tim} ...`);
 
   const query = `SELECT no_punggung, nama, posisi_pemain FROM pemain LEFT JOIN identitas ON pemain.id_identitas = identitas.id_identitas WHERE pemain.selected = 't' AND pemain.id_tim = '${req.session.id_tim}'; `;
@@ -261,7 +258,7 @@ app.get("/getselectedplayer", (req, res) => {
 app.post("/createplayer", (req, res) => {
 
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${req.body.nama}', ${req.body.umur}, ${req.body.no_punggung}, ${req.body.tinggi}, '${req.body.berat_badan}');`;
-  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, passing, stamina, dribbling) VALUES (${req.body.agility}, ${req.body.defence}, ${req.body.shooting}, ${req.body.passing}, ${req.body.stamina}, ${req.body.dribbling});`;
+  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES (${req.body.agility}, ${req.body.defence}, ${req.body.shooting}, ${req.body.speed}, ${req.body.passing}, ${req.body.stamina}, ${req.body.dribbling});`;
 
   db.query(queryIdentitas, (err, resultsIdentitas) => {
 
