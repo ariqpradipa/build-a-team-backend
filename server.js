@@ -271,7 +271,7 @@ app.post("/createplayer", (req, res) => {
   inputBeratBadan = req.body.berat_badan;
 
   inputAgility = req.body.agility;
-  inputDefance = req.body.defance;
+  inputDefence = req.body.defence;
   inputShooting = req.body.shooting;
   inputSpeed = req.body.speed;
   inputPassing = req.body.passing;
@@ -279,21 +279,22 @@ app.post("/createplayer", (req, res) => {
   inputDribbling = req.body.dribbling;
   
   inputPosisi = req.body.posisi;
-  
-  const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}, ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan}');`;
-  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES (${inputAgility}, ${inputDefance}, ${inputShooting}, ${inputSpeed}, ${inputPassing}, ${inputStamina}, ${inputDribbling});`;
+
+  const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}', ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan});`;
+  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES ('${inputAgility}', '${inputDefence}', '${inputShooting}', '${inputSpeed}', '${inputPassing}', '${inputStamina}', '${inputDribbling}');`;
 
   db.query(queryIdentitas, (err, resultsIdentitas) => {
 
     if (err) {
 
       console.log(err);
+      res.end("player created failed (identitas)");
 
       return;
 
     }
 
-    console.log(resultsIdentitas);
+    console.log(resultsIdentitas.rows[0]);
 
   });
   db.query(queryStatistik, (err, resultsStatistik) => {
@@ -301,12 +302,13 @@ app.post("/createplayer", (req, res) => {
     if (err) {
 
       console.log(err);
+      res.end("player created failed (statistik)");
 
       return;
 
     }
 
-    console.log(resultsStatistik);
+    console.log(resultsStatistik.rows[0]);
 
   });
 
@@ -317,40 +319,47 @@ app.post("/createplayer", (req, res) => {
     if (err) {
 
       console.log(err);
+      res.end("player created failed (get id identitas)");
 
       return;
 
     }
 
-    console.log(resultsGetIndentitas);
+    console.log(resultsGetIndentitas.rows[0]);
 
     db.query(queryGetStatistik, (err, resultsGetStatistik) => {
 
       if (err) {
 
         console.log(err);
+        res.end("player created failed (get id statistik)");
 
         return;
 
       }
-      console.log(resultsGetStatistik);
+      console.log(resultsGetStatistik.rows[0]);
 
-      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, '${inputPosisi}');`;
+      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, ${req.session.id_tim},'${inputPosisi}');`;
       db.query(querypemain, (err, resultsPemain) => {
 
         if (err) {
 
           console.log(err);
+          res.end("player created failed (pemain)");
 
           return;
 
         }
-        console.log(resultsPemain);
+
+        res.end("player created successfully");
+        console.log(resultsPemain.rows[0]);
+        return;
+
       });
     });
   });
 
-  res.end("player created successfully");
+  res.end("player created failed");
 
 });
 
@@ -364,6 +373,7 @@ app.get("/getplayer", (req, res) => {
 
       alert("gagal mengambil data player");
       res.end("gagal ngambil data");
+      return;
 
     }
 
