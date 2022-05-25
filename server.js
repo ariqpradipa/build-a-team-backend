@@ -334,7 +334,7 @@ app.post("/createplayer", (req, res) => {
 //get player
 app.get("/getplayer", (req, res) => {
 
-  const queryTim = `SELECT * FROM tim where TIM.user_id = ${req.session.user_id};`;
+  const queryTim = `SELECT * FROM tim where tim.user_id = ${req.session.user_id};`;
   db.query(queryTim, (err, resultsTim) => {
 
     if (err) {
@@ -346,12 +346,13 @@ app.get("/getplayer", (req, res) => {
 
     objectTim = resultsTim.rows[0];
     console.log(objectTim);
+
     const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
     db.query(query, (err, results) => {
 
       if (err) {
 
-        //alert("Get player failed");
+        alert("Get player failed");
         res.end("Failed to get player");
 
       }
@@ -366,8 +367,9 @@ app.get("/getplayer", (req, res) => {
 app.post("/createteam", (req, res) => {
 
   temp = req.session;
-  console.log(temp)
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${temp.user_id}');`; //query tambahkan tim baru ke database
+
+  //query tambahkan tim baru ke database
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${req.session.user_id}');`; 
   db.query(query, (err, results) => {
 
     if (err) {
@@ -376,17 +378,18 @@ app.post("/createteam", (req, res) => {
       res.end("fail");
 
     }
+
     console.log(results.rows)
     res.end("Team created successfully");
 
   });
 
-  const queryId = `SELECT user_id FROM users WHERE username LIKE '${temp.username}';`;
+  const queryId = `SELECT user_id FROM users WHERE username LIKE '${req.session.username}';`;
   db.query(queryId, (err, resultsUserID) => {
 
     if (err) {
 
-      //alert("get ID failed");
+      alert("get ID failed");
       res.end("failed");
 
     } else if (resultsUserID === null) {
@@ -400,7 +403,7 @@ app.post("/createteam", (req, res) => {
 
     }
     // console.log(`RESULTS = ${results}`)
-    const queryIdTim = `SELECT id_tim FROM tim WHERE user_id = '${temp.user_id}';`;
+    const queryIdTim = `SELECT id_tim FROM tim WHERE user_id = '${req.session.user_id}';`;
     db.query(queryIdTim, (err, results_idTim) => {
 
       if (err) {
