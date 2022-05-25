@@ -236,14 +236,14 @@ app.put("/unsetselectedplayer", (req, res) => {
 
 app.get("/getselectedplayer", (req, res) => {
 
-  console.log(`Getting all selected players from team ${req.session.id_tim} ...`);
-
   if(req.session.id_tim === undefined) {
 
     res.end("Team not created yet");
     return;
 
   }
+
+  console.log(`Getting all selected players from team ${req.session.id_tim} ...`);
 
   const query = `SELECT no_punggung, nama, posisi_pemain FROM pemain LEFT JOIN identitas ON pemain.id_identitas = identitas.id_identitas WHERE pemain.selected = 't' AND pemain.id_tim = '${req.session.id_tim}'; `;
   db.query(query, (err, results) => {
@@ -264,8 +264,24 @@ app.get("/getselectedplayer", (req, res) => {
 
 app.post("/createplayer", (req, res) => {
 
-  const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${req.body.nama}', ${req.body.umur}, ${req.body.no_punggung}, ${req.body.tinggi}, '${req.body.berat_badan}');`;
-  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES (${req.body.agility}, ${req.body.defence}, ${req.body.shooting}, ${req.body.speed}, ${req.body.passing}, ${req.body.stamina}, ${req.body.dribbling});`;
+  inputNama = req.body.nama;
+  inputUmur = req.body.umur;
+  inputNo_punggung = req.body.no_punggung;
+  inputTinggi = req.body.tinggi;
+  inputBeratBadan = req.body.berat_badan;
+
+  inputAgility = req.body.agility;
+  inputDefance = req.body.defance;
+  inputShooting = req.body.shooting;
+  inputSpeed = req.body.speed;
+  inputPassing = req.body.passing;
+  inputStamina = req.body.stamina;
+  inputDribbling = req.body.dribbling;
+  
+  inputPosisi = req.body.posisi;
+  
+  const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}, ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan}');`;
+  const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES (${inputAgility}, ${inputDefance}, ${inputShooting}, ${inputSpeed}, ${inputPassing}, ${inputStamina}, ${inputDribbling});`;
 
   db.query(queryIdentitas, (err, resultsIdentitas) => {
 
@@ -319,7 +335,7 @@ app.post("/createplayer", (req, res) => {
       }
       console.log(resultsGetStatistik);
 
-      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, '${req.body.formasis}');`;
+      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, '${inputPosisi}');`;
       db.query(querypemain, (err, resultsPemain) => {
 
         if (err) {
@@ -374,9 +390,12 @@ app.get("/getplayer", (req, res) => {
 app.post("/createteam", (req, res) => {
 
   temp = req.session;
+  inputNamaTim = req.body.nama_tim;
+  inputManager = req.body.manager;
+  inputFormasis = req.body.formasis;
 
   //query tambahkan tim baru ke database
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${req.session.user_id}');`; 
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${req.session.user_id}');`; 
   db.query(query, (err, results) => {
 
     if (err) {
