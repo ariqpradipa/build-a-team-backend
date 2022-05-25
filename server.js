@@ -281,9 +281,10 @@ app.post("/createplayer", (req, res) => {
   inputPosisi = req.body.posisi;
 
   if(req.session.username == undefined || req.session.password == undefined) {
+
     res.end("Not logged in yet");
-    alert("Not logged in yet");
     return;
+  
   }
 
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}', ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan});`;
