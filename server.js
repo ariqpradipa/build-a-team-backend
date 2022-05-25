@@ -108,8 +108,6 @@ app.post("/login", (req, res) => {
 
   }
 
-  temp.password = hashedPassword;
-
   const query = `SELECT password FROM users WHERE username LIKE '${temp.username}';`;
   db.query(query, (err, results) => {
 
@@ -119,6 +117,8 @@ app.post("/login", (req, res) => {
       res.end("failed");
 
     }
+
+    temp.password = results.rows[0].password;
 
     bcrypt.compare(temp.password, results.rows[0].password, (err, isMatch) => {
 
@@ -237,6 +237,13 @@ app.put("/unsetselectedplayer", (req, res) => {
 app.get("/getselectedplayer", (req, res) => {
 
   console.log(`Getting all selected players from team ${req.session.id_tim} ...`);
+
+  if(req.session.id_tim === undefined) {
+
+    res.end("Team not created yet");
+    return;
+
+  }
 
   const query = `SELECT no_punggung, nama, posisi_pemain FROM pemain LEFT JOIN identitas ON pemain.id_identitas = identitas.id_identitas WHERE pemain.selected = 't' AND pemain.id_tim = '${req.session.id_tim}'; `;
   db.query(query, (err, results) => {
