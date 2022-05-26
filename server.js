@@ -181,7 +181,7 @@ app.post("/login", (req, res) => {
           console.log(`results_idTim = '${results_idTim.rows[0].id_tim}'`);
           temp.id_tim = results_idTim.rows[0].id_tim;
           console.log(temp);
-          res.end("Login berhasil");
+          res.send(temp);
 
         }
       });
@@ -236,7 +236,7 @@ app.put("/unsetselectedplayer", (req, res) => {
 
 app.get("/getselectedplayer", (req, res) => {
 
-  if(req.session.id_tim === undefined) {
+  if (req.session.id_tim === undefined) {
 
     res.end("Team not created yet");
     return;
@@ -277,14 +277,14 @@ app.post("/createplayer", (req, res) => {
   inputPassing = req.body.passing;
   inputStamina = req.body.stamina;
   inputDribbling = req.body.dribbling;
-  
+
   inputPosisi = req.body.posisi;
 
-  if(req.session.username == undefined || req.session.password == undefined) {
+  if (req.session.username == undefined || req.session.password == undefined) {
 
     res.end("Not logged in yet");
     return;
-  
+
   }
 
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}', ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan});`;
@@ -301,7 +301,7 @@ app.post("/createplayer", (req, res) => {
 
     }
 
-    console.log(resultsIdentitas);
+    console.log("result identitas = " + resultsIdentitas);
 
   });
   db.query(queryStatistik, (err, resultsStatistik) => {
@@ -315,55 +315,59 @@ app.post("/createplayer", (req, res) => {
 
     }
 
-    console.log(resultsStatistik);
+    console.log("result statistik = " + resultsStatistik);
 
   });
 
-  const queryGetIndentitas = `SELECT * FROM identitas ORDER BY id_identitas DESC LIMIT 1;`;
-  const queryGetStatistik = `SELECT * FROM statistik ORDER BY id_statistik DESC LIMIT 1;`;
-  db.query(queryGetIndentitas, (err, resultsGetIndentitas) => {
+  setTimeout(
+    function () {
 
-    if (err) {
-
-      console.log(err);
-      res.end("player created failed (get id identitas)");
-
-      return;
-
-    }
-
-    console.log(resultsGetIndentitas.rows[0]);
-
-    db.query(queryGetStatistik, (err, resultsGetStatistik) => {
-
-      if (err) {
-
-        console.log(err);
-        res.end("player created failed (get id statistik)");
-
-        return;
-
-      }
-      console.log(resultsGetStatistik.rows[0]);
-
-      const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, ${req.session.id_tim},'${inputPosisi}');`;
-      db.query(querypemain, (err, resultsPemain) => {
+      const queryGetIndentitas = `SELECT * FROM identitas ORDER BY id_identitas DESC LIMIT 1;`;
+      const queryGetStatistik = `SELECT * FROM statistik ORDER BY id_statistik DESC LIMIT 1;`;
+      db.query(queryGetIndentitas, (err, resultsGetIndentitas) => {
 
         if (err) {
 
           console.log(err);
-          res.end("player created failed (pemain)");
+          res.end("player created failed (get id identitas)");
 
           return;
 
         }
 
-        console.log(resultsPemain);
-        return;
+        console.log(resultsGetIndentitas.rows[0]);
 
+        db.query(queryGetStatistik, (err, resultsGetStatistik) => {
+
+          if (err) {
+
+            console.log(err);
+            res.end("player created failed (get id statistik)");
+
+            return;
+
+          }
+          console.log(resultsGetStatistik.rows[0]);
+
+          const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES (${resultsGetIndentitas.rows[0].id_identitas}, ${resultsGetStatistik.rows[0].id_statistik}, ${req.session.id_tim},'${inputPosisi}');`;
+          db.query(querypemain, (err, resultsPemain) => {
+
+            if (err) {
+
+              console.log(err);
+              res.end("player created failed (pemain)");
+
+              return;
+
+            }
+
+            console.log(resultsPemain);
+            return;
+
+          });
+        });
       });
-    });
-  });
+    }, 2000);
 
   res.end("player created successfully");
 
@@ -411,7 +415,7 @@ app.post("/createteam", (req, res) => {
   inputFormasis = req.body.formasis;
 
   //query tambahkan tim baru ke database
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${req.session.user_id}');`; 
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${req.session.user_id}');`;
   db.query(query, (err, results) => {
 
     if (err) {
