@@ -3,24 +3,32 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const app = express();
 const { Pool } = require("pg");
 
 const bcrypt = require("bcrypt");
 
-// var corsOptions = {
-//   origin: "http://localhost:8081"
-// };
-app.use(cors());
-//middleware (session)
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+  credentials: true
+}));
+
+//middleware (session)S
 app.use(
   session({
-    secret: "ini contoh secret",
+    key: "userId",
+    secret: "a random unique string key used to authenticate a session.",
     saveUninitialized: false,
     resave: false,
+    cookie: { expires: 60 * 60 * 24 },
   })
 );
-app.use(bodyParser.json());
+
+app.use(cookieParser());
+app.use(express.json());
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -50,12 +58,12 @@ db.connect((err) => {
 app.post("/register", (req, res) => {
   temp = req.session;
   temp.username = req.body.username;
-  temp.password = req.body.password;
+  password = req.body.password;
   console.log(temp.username);
-  console.log(temp.password);
+  console.log(password);
 
   // Use bcrypt.hash() function to hash the password
-  bcrypt.hash(temp.password, 10, (err, hashedPassword) => {
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       return err;
     }
@@ -76,13 +84,19 @@ app.post("/register", (req, res) => {
   res.end("user berhasil dibuat");
 });
 
+app.get("/login", (req, res) => {
+  temp = req.session;
+  console.log()
+  res.send(req.session);
+});
+
 // Login
 app.post("/login", (req, res) => {
   temp = req.session;
   temp.username = req.body.username;
-  temp.password = req.body.password;
+  password = req.body.password;
 
-  if (temp.username === "" || temp.password === "") {
+  if (temp.username === "" || password === "") {
     console.log("Form login is empty. ");
     res.send("Empty login form");
     return;
@@ -92,13 +106,16 @@ app.post("/login", (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       alert("Login Failed");
-      res.end("failed");
+      res.send("Login failed");
     }
 
-    bcrypt.compare(temp.password, results.rows[0].password, (err, isMatch) => {
+    bcrypt.compare(password, results.rows[0].password, (err, isMatch) => {
       if (err) {
         res.send("failed");
+      } else {
+
       }
+
       //If password matches then display true
       console.log(`Password Match = ${isMatch}.`);
     });
@@ -137,10 +154,10 @@ app.post("/login", (req, res) => {
           console.log(`results_idTim = '${results_idTim.rows[0].id_tim}'`);
           temp.id_tim = results_idTim.rows[0].id_tim;
           console.log(temp);
-          res.end("Login berhasil");
+          res.send(temp);
         }
       });
-    };
+    }
   });
 });
 
@@ -160,7 +177,7 @@ app.put("/setSelectedPlayer", (req, res) => {
       res.end("failed to select");
     } else {
       console.log(results);
-      res.send("query select pemain berhasil");
+      res.send(results.rows);
     }
   });
 });
@@ -180,7 +197,7 @@ app.get("/getSelectedPlayer", (req, res) => {
       res.end("failed to get selected player");
     } else {
       console.log(results.rows);
-      res.send(`query selected pemain berhasil ${results.rows}`);
+      res.send(results.rows);
     }
   });
 });
@@ -237,14 +254,14 @@ app.post("/createplayer", (req, res) => {
 // ROUTE CREATE TEAM
 app.post("/createteam", (req, res) => {
   temp = req.session;
-  console.log(temp)
+  console.log(temp);
   const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${req.body.nama_tim}','${req.body.manager}','${req.body.formasis}', '${temp.user_id}');`; //query tambahkan tim baru ke database
   db.query(query, (err, results) => {
     if (err) {
       console.log(err);
       res.end("fail");
     }
-    console.log(results.rows)
+    console.log(results.rows);
     res.end("Team created successfully");
   });
 
@@ -256,7 +273,7 @@ app.post("/createteam", (req, res) => {
     } else if (resultsUserID === null) {
       res.end("Can't find an associated account.");
     } else {
-      console.log(resultsUserID)
+      console.log(resultsUserID);
       temp.user_id = resultsUserID.rows[0].user_id;
     }
     // console.log(`RESULTS = ${results}`)
@@ -275,7 +292,9 @@ app.post("/createteam", (req, res) => {
 
 //router 5: melakukan pemngambilan data dari database
 app.get("/getteam", (req, res) => {
-  console.log(req.session);
+  console.log("MULAI GET TEAM ---------------------");
+  // console.log(req.session);
+
   const query = `select * from tim where user_id = ${req.session.user_id};`; // query ambil data
   //mendapatkan data dari database
   db.query(query, (err, results) => {
@@ -284,7 +303,7 @@ app.get("/getteam", (req, res) => {
       res.end("Failed to get team");
       return;
     } else {
-      res.json(results.rows[0])
+      res.json(results.rows[0]);
     }
     // res.write(`<table>
     //               <tr>
