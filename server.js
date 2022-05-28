@@ -381,6 +381,51 @@ app.get("/getplayer", (req, res) => {
   });
 });
 
+//delete player
+app.post("/deleteplayer", (req, res) => {
+  console.log("MULAI DELETE PLAYER");
+  id_pemain = req.body.id_pemain;
+
+  const query = `DELETE FROM pemain WHERE id_pemain = '${id_pemain}';`;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log("Delete player failed");
+      res.end("Failed to delete player");
+      return;
+    }
+
+    console.log("player deleted successfully");
+    res.end("player deleted successfully");
+
+  });
+});
+
+// update statistik pemain
+app.put("/updatestatistikplayer", (req, res) => {
+  
+  id_pemain = req.body.id_pemain;
+  inputAgility = req.body.agility;
+  inputDefence = req.body.defence;
+  inputShooting = req.body.shooting;
+  inputSpeed = req.body.speed;
+  inputPassing = req.body.passing;
+  inputStamina = req.body.stamina;
+  inputDribbling = req.body.dribbling;
+
+  const query = `UPDATE statistik SET agility = '${inputAgility}', defence = '${inputDefence}', shooting = '${inputShooting}', speed = '${inputSpeed}', passing = '${inputPassing}', stamina = '${inputStamina}', dribbling = '${inputDribbling}' WHERE id_pemain = '${id_pemain}';`;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log("Update statistik player failed");
+      res.end("Failed to update statistik player");
+      return;
+    }
+
+    console.log("statistik player updated successfully");
+    res.end("statistik player updated successfully");
+  })
+});
+
+
 // ROUTE CREATE TEAM
 app.post("/createteam", (req, res) => {
   console.log("MASUK CREATE TEAM");
