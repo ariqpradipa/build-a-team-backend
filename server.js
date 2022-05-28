@@ -303,11 +303,11 @@ app.post("/createplayer", (req, res) => {
           return;
         }
         console.log(resultsGetStatistik.rows[0]);
-        console.log("NIH DI BAWAH YG DIMASUKIN KE QUERYPEMAIN")
-        console.log(resultsGetIndentitas.rows[0].id_identitas)
-        console.log(resultsGetStatistik.rows[0].id_statistik)
-        console.log(inputIDtim)
-        console.log(inputPosisi)
+        console.log("NIH DI BAWAH YG DIMASUKIN KE QUERYPEMAIN");
+        console.log(resultsGetIndentitas.rows[0].id_identitas);
+        console.log(resultsGetStatistik.rows[0].id_statistik);
+        console.log(inputIDtim);
+        console.log(inputPosisi);
         const querypemain = `INSERT INTO pemain(id_identitas, id_statistik, id_tim, posisi_pemain) VALUES ('${resultsGetIndentitas.rows[0].id_identitas}', '${resultsGetStatistik.rows[0].id_statistik}', '${inputIDtim}','${inputPosisi}');`;
         db.query(querypemain, (err, resultsPemain) => {
           if (err) {
@@ -331,27 +331,33 @@ app.post("/createplayer", (req, res) => {
 app.get("/getplayer", (req, res) => {
   console.log("MULAI GET PLAYER");
   //  userId = req.session.user_id;
-  userId = req.session.user_id;
+  //userId = req.session.user_id;
+  user_id = req.query.user_id;
+  console.log("DI BAWAH USER ID DARI REACT SESSION");
+  console.log(user_id);
 
-  const queryTim = `SELECT * FROM tim where tim.user_id = ${userId};`;
+  const queryTim = `SELECT * FROM tim where tim.user_id = ${user_id};`;
   db.query(queryTim, (err, resultsTim) => {
     if (err) {
       console.log("gagal mengambil data player");
+      console.log(resultsTim);
       res.end("gagal ngambil data");
       return;
+    } else {
+      console.log("berhasil queryTim");
+      objectTim = resultsTim.rows[0];
+      console.log(resultsTim);
     }
-
-    objectTim = resultsTim.rows[0];
-    console.log(objectTim);
 
     const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
     db.query(query, (err, results) => {
       if (err) {
         console.log("Get player failed");
         res.end("Failed to get player");
+      } else {
+        console.log(results.rows);
+        res.send(results.rows);
       }
-      //console.log(results.rows);
-      res.send(results.rows);
     });
   });
 });
@@ -368,7 +374,7 @@ app.post("/createteam", (req, res) => {
   inputUserID = req.body.user_id;
 
   //query tambahkan tim baru ke database
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${req.session.user_id}');`;
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${inputUserID}');`;
   db.query(query, (err, results) => {
     if (err) {
       console.log("QUERY BIKIN TIM GAGAL");
@@ -376,7 +382,7 @@ app.post("/createteam", (req, res) => {
       res.end("fail");
     } else {
       console.log("BERHASIL BIKIN TIM");
-      console.log(results.rows);
+      console.log(results);
       res.send(results);
     }
   });
