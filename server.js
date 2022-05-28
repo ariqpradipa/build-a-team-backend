@@ -113,22 +113,24 @@ app.post("/login", (req, res) => {
       console.log("No associated account is found.");
       res.end("No associated account is found.");
       return;
+    } else {
+
+      bcrypt.compare(inputPassword, results.rows[0].password, (err, isMatch) => {
+        if (err) {
+          res.end("failed");
+          return;
+        }
+  
+        if (!isMatch) {
+          res.end("Password is not match");
+          return;
+        }
+  
+        //If password matches then display true
+        console.log(`Password Match = ${isMatch}.`);
+      });
     }
 
-    bcrypt.compare(inputPassword, results.rows[0].password, (err, isMatch) => {
-      if (err) {
-        res.end("failed");
-        return;
-      }
-
-      if (!isMatch) {
-        res.end("Password is not match");
-        return;
-      }
-
-      //If password matches then display true
-      console.log(`Password Match = ${isMatch}.`);
-    });
   });
 
   const queryId = `SELECT user_id FROM users WHERE username LIKE '${temp.username}';`;
@@ -176,37 +178,54 @@ app.post("/login", (req, res) => {
 
 // Set Selected Player
 app.put("/setselectedplayer", (req, res) => {
-  playerID = req.body.playerID;
-  console.log(
-    `Got player ${playerID} from team ${req.session.id_tim} to select`
-  );
+  console.log("MASUK SET SELECTED PLAYER");
 
-  const query = `UPDATE pemain SET selected = true WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${playerID}'`;
-  db.query(query, (err, results) => {
-    if (err) {
-      console.log("Set selected failed");
-      res.end("failed to select");
-    } else {
-      console.log(results);
-      res.send("query select pemain berhasil");
-    }
-  });
+  // body
+  arrayPlayerID = req.body.playerID;
+  teamID = req.body.id_tim;
+
+  console.log(arrayPlayerID);
+
+  for (let i = 0; i < arrayPlayerID.length; i++) {
+    console.log(
+      `Got player ${arrayPlayerID[i]} from team ${teamID} to select`
+    );
+    const query = `UPDATE pemain SET selected = true WHERE id_tim = '${teamID}' AND id_pemain = '${arrayPlayerID[i]}'`;
+    db.query(query, (err, results) => {
+      if (err) {
+        console.log("Set selected failed");
+        res.end("failed to select");
+      } else {
+        console.log(results);
+        res.send("query select pemain berhasil");
+      }
+    });
+  }
 });
 
 // Unset Selected Player
 app.put("/unsetselectedplayer", (req, res) => {
-  playerID = req.body.playerID;
-
-  const query = `UPDATE pemain SET selected = false WHERE id_tim = '${req.session.id_tim}' AND id_pemain = '${playerID}'`;
-  db.query(query, (err, results) => {
-    if (err) {
-      console.log(err);
-      res.end("failed to unselect");
+    // body
+    arrayPlayerID = req.body.playerID;
+    teamID = req.body.id_tim;
+  
+    console.log(arrayPlayerID);
+  
+    for (let i = 0; i < arrayPlayerID.length; i++) {
+      console.log(
+        `Got player ${arrayPlayerID[i]} from team ${teamID} to select`
+      );
+      const query = `UPDATE pemain SET selected = false WHERE id_tim = '${teamID}' AND id_pemain = '${arrayPlayerID[i]}'`;
+      db.query(query, (err, results) => {
+        if (err) {
+          console.log("failed to unselect");
+          res.end("failed to select");
+        } else {
+          console.log(results);
+          res.send("query unselect pemain berhasil");
+        }
+      });
     }
-
-    console.log(results);
-    res.end("query unset pemain berhasil");
-  });
 });
 
 app.get("/getselectedplayer", (req, res) => {
@@ -340,13 +359,13 @@ app.get("/getplayer", (req, res) => {
   db.query(queryTim, (err, resultsTim) => {
     if (err) {
       console.log("gagal mengambil data player");
-      console.log(resultsTim);
+      //console.log(resultsTim);
       res.end("gagal ngambil data");
       return;
     } else {
       console.log("berhasil queryTim");
       objectTim = resultsTim.rows[0];
-      console.log(resultsTim);
+      //console.log(resultsTim);
     }
 
     const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
