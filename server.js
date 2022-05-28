@@ -229,23 +229,25 @@ app.put("/unsetselectedplayer", (req, res) => {
 });
 
 app.get("/getselectedplayer", (req, res) => {
-  if (req.session.id_tim === undefined) {
+  inputIDtim = req.query.id_tim;
+  if (inputIDtim === undefined) {
+    console.log("Team not created yet")
     res.end("Team not created yet");
     return;
   }
 
   console.log(
-    `Getting all selected players from team ${req.session.id_tim} ...`
+    `Getting all selected players from team ${inputIDtim} ...`
   );
 
-  const query = `SELECT no_punggung, nama, posisi_pemain FROM pemain LEFT JOIN identitas ON pemain.id_identitas = identitas.id_identitas WHERE pemain.selected = 't' AND pemain.id_tim = '${req.session.id_tim}'; `;
+  const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${inputIDtim}' AND pemain.selected = 't'; `;
   db.query(query, (err, results) => {
     if (err) {
       //console.log("Get selected failed");
       res.end("failed to get selected player");
     } else {
       console.log(results.rows);
-      res.send(`query selected pemain berhasil ${results.rows}`);
+      res.send(results.rows);
     }
   });
 });
@@ -365,7 +367,7 @@ app.get("/getplayer", (req, res) => {
     } else {
       console.log("berhasil queryTim");
       objectTim = resultsTim.rows[0];
-      //console.log(resultsTim);
+      console.log(resultsTim);
     }
 
     const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${objectTim.id_tim}';`;
@@ -430,15 +432,14 @@ app.put("/updatestatistikplayer", (req, res) => {
 app.post("/createteam", (req, res) => {
   console.log("MASUK CREATE TEAM");
 
-  temp = req.session;
   console.log(temp);
   inputNamaTim = req.body.nama_tim;
   inputManager = req.body.manager;
   inputFormasis = req.body.formasis;
-  inputUserID = req.body.user_id;
+  UserID = req.session.user_id;
 
   //query tambahkan tim baru ke database
-  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${inputUserID}');`;
+  const query = `insert into tim (nama_tim, manager, formasis, user_id) values ('${inputNamaTim}','${inputManager}','${inputFormasis}', '${UserID}');`;
   db.query(query, (err, results) => {
     if (err) {
       console.log("QUERY BIKIN TIM GAGAL");
