@@ -114,23 +114,25 @@ app.post("/login", (req, res) => {
       res.end("No associated account is found.");
       return;
     } else {
+      bcrypt.compare(
+        inputPassword,
+        results.rows[0].password,
+        (err, isMatch) => {
+          if (err) {
+            res.end("failed");
+            return;
+          }
 
-      bcrypt.compare(inputPassword, results.rows[0].password, (err, isMatch) => {
-        if (err) {
-          res.end("failed");
-          return;
+          if (!isMatch) {
+            res.end("Password is not match");
+            return;
+          }
+
+          //If password matches then display true
+          console.log(`Password Match = ${isMatch}.`);
         }
-  
-        if (!isMatch) {
-          res.end("Password is not match");
-          return;
-        }
-  
-        //If password matches then display true
-        console.log(`Password Match = ${isMatch}.`);
-      });
+      );
     }
-
   });
 
   const queryId = `SELECT user_id FROM users WHERE username LIKE '${temp.username}';`;
@@ -154,14 +156,10 @@ app.post("/login", (req, res) => {
       const queryIdTim = `SELECT id_tim FROM tim WHERE user_id = '${req.session.user_id}';`;
       db.query(queryIdTim, (err, results_idTim) => {
         if (err) {
-          //console.log("get id tim failed")s;
           console.log("GAGAL QUERY ID TIM");
           console.error(err.message);
           res.end("Gagal queryIdTim");
         } else if (results_idTim.rows.length === 0) {
-          // console.log(`results_idTim = '${results_idTim.rows[0].id_tim}'`);
-          // temp.id_tim = results_idTim.rows[0].id_tim;
-          // console.log(temp);
           console.log(results_idTim.rows);
           console.log(temp);
           res.end("Login berhasil (id_tim tidak ditemukan)");
@@ -187,9 +185,7 @@ app.put("/setselectedplayer", (req, res) => {
   console.log(arrayPlayerID);
 
   for (let i = 0; i < arrayPlayerID.length; i++) {
-    console.log(
-      `Got player ${arrayPlayerID[i]} from team ${teamID} to select`
-    );
+    console.log(`Got player ${arrayPlayerID[i]} from team ${teamID} to select`);
     const query = `UPDATE pemain SET selected = true WHERE id_tim = '${teamID}' AND id_pemain = '${arrayPlayerID[i]}'`;
     db.query(query, (err, results) => {
       if (err) {
@@ -205,40 +201,36 @@ app.put("/setselectedplayer", (req, res) => {
 
 // Unset Selected Player
 app.put("/unsetselectedplayer", (req, res) => {
-    // body
-    arrayPlayerID = req.body.playerID;
-    teamID = req.body.id_tim;
-  
-    console.log(arrayPlayerID);
-  
-    for (let i = 0; i < arrayPlayerID.length; i++) {
-      console.log(
-        `Got player ${arrayPlayerID[i]} from team ${teamID} to select`
-      );
-      const query = `UPDATE pemain SET selected = false WHERE id_tim = '${teamID}' AND id_pemain = '${arrayPlayerID[i]}'`;
-      db.query(query, (err, results) => {
-        if (err) {
-          console.log("failed to unselect");
-          res.end("failed to select");
-        } else {
-          console.log(results);
-          res.send("query unselect pemain berhasil");
-        }
-      });
-    }
+  // body
+  arrayPlayerID = req.body.playerID;
+  teamID = req.body.id_tim;
+
+  console.log(arrayPlayerID);
+
+  for (let i = 0; i < arrayPlayerID.length; i++) {
+    console.log(`Got player ${arrayPlayerID[i]} from team ${teamID} to select`);
+    const query = `UPDATE pemain SET selected = false WHERE id_tim = '${teamID}' AND id_pemain = '${arrayPlayerID[i]}'`;
+    db.query(query, (err, results) => {
+      if (err) {
+        console.log("failed to unselect");
+        res.end("failed to select");
+      } else {
+        console.log(results);
+        res.send("query unselect pemain berhasil");
+      }
+    });
+  }
 });
 
 app.get("/getselectedplayer", (req, res) => {
   inputIDtim = req.query.id_tim;
   if (inputIDtim === undefined) {
-    console.log("Team not created yet")
+    console.log("Team not created yet");
     res.end("Team not created yet");
     return;
   }
 
-  console.log(
-    `Getting all selected players from team ${inputIDtim} ...`
-  );
+  console.log(`Getting all selected players from team ${inputIDtim} ...`);
 
   const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_tim = '${inputIDtim}' AND pemain.selected = 't'; `;
   db.query(query, (err, results) => {
@@ -273,11 +265,6 @@ app.post("/createplayer", (req, res) => {
   console.log(req.body);
   console.log("INI ISI SESSION DI BAWAH");
   console.log(req.session);
-
-  // if (req.session.username == undefined) {
-  //   res.end("Not logged in yet");
-  //   return;
-  // }
 
   const queryIdentitas = `INSERT INTO identitas(nama, umur, no_punggung, tinggi, berat_badan) VALUES ('${inputNama}', ${inputUmur}, ${inputNo_punggung}, ${inputTinggi}, ${inputBeratBadan});`;
   const queryStatistik = `INSERT INTO statistik(agility, defence, shooting, speed, passing, stamina, dribbling) VALUES ('${inputAgility}', '${inputDefence}', '${inputShooting}', '${inputSpeed}', '${inputPassing}', '${inputStamina}', '${inputDribbling}');`;
@@ -351,8 +338,6 @@ app.post("/createplayer", (req, res) => {
 //get player
 app.get("/getplayer", (req, res) => {
   console.log("MULAI GET PLAYER");
-  //  userId = req.session.user_id;
-  //userId = req.session.user_id;
   user_id = req.query.user_id;
   console.log("DI BAWAH USER ID DARI REACT SESSION");
   console.log(user_id);
@@ -383,7 +368,27 @@ app.get("/getplayer", (req, res) => {
   });
 });
 
-//delete player
+//get single player
+app.get("/getsingleplayer", (req, res) => {
+  console.log("MULAI GET SINGLE PLAYER");
+  player_id = req.query.player_id;
+  console.log("DI BAWAH USER ID DARI REACT SESSION");
+  console.log(player_id);
+
+  const query = `SELECT * FROM pemain NATURAL JOIN tim NATURAL JOIN statistik NATURAL JOIN identitas WHERE pemain.id_pemain = ${player_id};`;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log("Get player failed");
+      res.end("Failed to get player");
+    } else {
+      console.log(results.rows);
+      res.send(results.rows);
+    }
+  });
+
+});
+
+// delete player
 app.post("/deleteplayer", (req, res) => {
   console.log("MULAI DELETE PLAYER");
   id_pemain = req.body.id_pemain;
@@ -398,14 +403,20 @@ app.post("/deleteplayer", (req, res) => {
 
     console.log("player deleted successfully");
     res.end("player deleted successfully");
-
   });
 });
 
 // update statistik pemain
 app.put("/updatestatistikplayer", (req, res) => {
   
-  id_pemain = req.body.id_pemain;
+  id_identitas = req.body.id_identitas;
+  inputNama = req.body.nama;
+  inputUmur = req.body.umur;
+  inputTinggi = req.body.tinggi;
+  inputBeratBadan = req.body.berat_badan;
+  inputNoPunggung = req.body.no_punggung;
+
+  id_statistik = req.body.id_pemain;
   inputAgility = req.body.agility;
   inputDefence = req.body.defence;
   inputShooting = req.body.shooting;
@@ -414,7 +425,19 @@ app.put("/updatestatistikplayer", (req, res) => {
   inputStamina = req.body.stamina;
   inputDribbling = req.body.dribbling;
 
-  const query = `UPDATE statistik SET agility = '${inputAgility}', defence = '${inputDefence}', shooting = '${inputShooting}', speed = '${inputSpeed}', passing = '${inputPassing}', stamina = '${inputStamina}', dribbling = '${inputDribbling}' WHERE id_pemain = '${id_pemain}';`;
+  const queryIdentitas = `UPDATE identitas SET nama = '${inputNama}', umur = '${inputUmur}', no_punggung = '${inputNoPunggung}', tinggi = '${inputTinggi}', berat_badan = '${inputBeratBadan}' WHERE id_identitas = ${id_identitas};`;
+  db.query(queryIdentitas, (err, results) => {
+    if (err) {
+      console.log("Update identitas player failed");
+      res.end("Failed to update identitas player");
+      return;
+    }
+
+    console.log("statistik player updated successfully");
+    res.end("statistik player updated successfully");
+  });
+
+  const query = `UPDATE statistik SET agility = '${inputAgility}', defence = '${inputDefence}', shooting = '${inputShooting}', speed = '${inputSpeed}', passing = '${inputPassing}', stamina = '${inputStamina}', dribbling = '${inputDribbling}' WHERE id_statistik = ${id_statistik};`;
   db.query(query, (err, results) => {
     if (err) {
       console.log("Update statistik player failed");
@@ -424,14 +447,14 @@ app.put("/updatestatistikplayer", (req, res) => {
 
     console.log("statistik player updated successfully");
     res.end("statistik player updated successfully");
-  })
-});
+  });
 
+  
+});
 
 // ROUTE CREATE TEAM
 app.post("/createteam", (req, res) => {
   console.log("MASUK CREATE TEAM");
-
   console.log(temp);
   inputNamaTim = req.body.nama_tim;
   inputManager = req.body.manager;
@@ -451,38 +474,9 @@ app.post("/createteam", (req, res) => {
       res.send(results);
     }
   });
-
-  // const queryId = `SELECT user_id FROM users WHERE username LIKE '${req.session.username}';`;
-  // db.query(queryId, (err, resultsUserID) => {
-  //   if (err) {
-  //     console.log("get ID failed");
-  //     res.end("failed");
-  //   } else if (resultsUserID === null) {
-  //     res.end("Can't find an associated account.");
-  //   } else {
-  //     console.log(resultsUserID);
-  //     temp.user_id = resultsUserID.rows[0].user_id;
-  //     console.log(temp);
-  //   }
-  //   // console.log(`RESULTS = ${results}`)
-  //   const queryIdTim = `SELECT id_tim FROM tim WHERE user_id = '${temp.user_id}';`;
-  //   db.query(queryIdTim, (err, results_idTim) => {
-  //     if (err) {
-  //       console.log("get id tim failed");
-  //       res.end("failed");
-  //     } else {
-  //       console.log(results_idTim);
-  //       // console.log(`results_idTim = '${results_idTim.rows[0].id_tim}'`);
-  //       temp.id_tim = results_idTim.rows[0].id_tim;
-  //       console.log(temp);
-  //       res.end("Login berhasil");
-  //     }
-  //   });
-  // });
   console.log("DAH KELAR BIKIN TIM NYA");
 });
 
-//router 5: melakukan pemngambilan data dari database
 app.get("/getteam", (req, res) => {
   userId = req.session.user_id;
 
@@ -497,22 +491,6 @@ app.get("/getteam", (req, res) => {
     } else {
       res.json(results.rows[0]);
     }
-    // res.write(`<table>
-    //               <tr>
-    //                   <th>ID</th>
-    //                   <th>Nama Team</th>
-    //                   <th>Manager</th>
-    //                   <th>Formasi</th>
-    //               </tr>`);
-    // for (row of results.rows) {
-    //   res.write(`<tr>
-    //                   <td>${row["id_tim"]}</td>
-    //                   <td>${row["nama_tim"]}</td>
-    //                   <td>${row["manager"]}</td>
-    //                   <td>${row["formasis"]}</td>
-    //               </tr>`);
-    // }
-    // res.end(`</table>`);
   });
 });
 
@@ -536,6 +514,30 @@ app.put("/setformation", (req, res) => {
   });
 });
 
+app.get("/getsuggestedplayer", (req, res) => {
+  timID = req.query.id_tim;
+  posisiPemain = req.query.posisi_pemain;
+  limitPemain = req.query.limit_pemain;
+  orderByWhat = req.query.requestedAttribute;
+  console.log("INI HASIL INPUT BODY GET SUGGESTED PLAYER");
+  console.log(timID);
+  console.log(posisiPemain);
+  console.log(limitPemain);
+  console.log(orderByWhat);
+
+  const query = `select * from pemain natural join statistik natural join identitas where id_tim = '${timID}' and posisi_pemain = '${posisiPemain}' order by ${orderByWhat} desc limit '${limitPemain}';`; // query ambil data
+  //mendapatkan data dari database
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.end("Failed to get suggested player");
+
+      return;
+    } else {
+      res.json(results.rows);
+    }
+  });
+});
 app.get("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
